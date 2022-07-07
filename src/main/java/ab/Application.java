@@ -20,6 +20,8 @@ import ab.weather.AccuWeather;
 import ab.weather.AwBuilder;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,9 +29,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Locale;
+import java.util.Optional;
 
 @SpringBootApplication
 @RestController
+@EnableCaching
 public class Application {
 
   private final AccuWeather accuWeather;
@@ -41,9 +45,10 @@ public class Application {
     this.accuWeather = new AccuWeather(apiKey);
   }
 
-  @GetMapping(value = "/{city}", produces = MediaType.TEXT_PLAIN_VALUE)
-  public String get(@PathVariable String city, @RequestParam(required = false) String locale) {
-    String localeString = locale == null ? "en_US" : locale;
+  @GetMapping(value = "/{city:\\d+}", produces = MediaType.TEXT_PLAIN_VALUE)
+  @Cacheable(cacheNames="get", key="#city + #locale + (T(java.time.Instant).now().getEpochSecond() / 7200)") // 2h
+  public String get(@PathVariable String city, @RequestParam Optional<String> locale) {
+    String localeString = locale.orElse("en_US");
     Locale localeObject = Locale.forLanguageTag(localeString.replace('_', '-'));
     String localeLanguage = localeObject.getLanguage();
     return new AwBuilder(localeObject)

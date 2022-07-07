@@ -145,10 +145,11 @@ public class AwBuilder {
     ArrayNode dailyForecasts = (ArrayNode) weeklyForecast.at("/DailyForecasts");
 
     OffsetDateTime effectiveDate = OffsetDateTime.parse(weeklyForecast.at("/Headline/EffectiveDate").asText());
-    int hourNow = effectiveDate.getHour();
+    OffsetDateTime firstForecast = OffsetDateTime.parse(dailyForecasts.get(0).at("/Date").asText());
 
     // 1. forecast
-    index12 = ((hourNow < 5) || (hourNow >= 17)) ? -1 : 0; // nighttime
+    index12 = ((firstForecast.toLocalDate().compareTo(effectiveDate.toLocalDate()) < 0) // yesterday forecast
+        || (effectiveDate.getHour() >= 18)) ? -1 : 0; // 6 PM or later - start with Tonight
     for (JsonNode forecast : dailyForecasts) {
       getWeather12(forecast, false);
       index12++;
