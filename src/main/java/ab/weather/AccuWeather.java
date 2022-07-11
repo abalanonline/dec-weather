@@ -24,6 +24,7 @@ import org.springframework.web.client.RestTemplate;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
 
 @Slf4j
 public class AccuWeather {
@@ -54,6 +55,7 @@ public class AccuWeather {
     RestTemplate restTemplate = new RestTemplate();
     byte[] bytes = restTemplate.getForObject(DATA_SERVICE + restUrl + '/' + location
         + "?apikey=" + apikey + "&details=true&metric=true&language=" + language, byte[].class);
+    log.debug(new String(bytes, StandardCharsets.UTF_8));
 
     try {
       return objectMapper.readTree(new ByteArrayInputStream(bytes));

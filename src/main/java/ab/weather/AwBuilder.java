@@ -144,8 +144,8 @@ public class AwBuilder {
   public AwBuilder appendForecast(JsonNode weeklyForecast) {
     ArrayNode dailyForecasts = (ArrayNode) weeklyForecast.at("/DailyForecasts");
 
-    OffsetDateTime effectiveDate = OffsetDateTime.parse(weeklyForecast.at("/Headline/EffectiveDate").asText());
     OffsetDateTime firstForecast = OffsetDateTime.parse(dailyForecasts.get(0).at("/Date").asText());
+    OffsetDateTime effectiveDate = OffsetDateTime.now(firstForecast.getOffset()); // FIXME: 2022-07-11 inconsistency
 
     // 1. forecast
     index12 = ((firstForecast.toLocalDate().compareTo(effectiveDate.toLocalDate()) < 0) // yesterday forecast
