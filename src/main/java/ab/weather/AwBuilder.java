@@ -38,6 +38,7 @@ public class AwBuilder {
   private final StringBuilder sb;
   private int index12;
   private String[] airQuality;
+  private final Locale locale;
 
   private String DAY = "%s. %s. High %+.0f.";
   private String NIGHT = "%s. %s. Low %+.0f.";
@@ -55,6 +56,7 @@ public class AwBuilder {
   private String HUMIDITY = "Relative humidity %s percent.";
 
   public AwBuilder(Locale locale) {
+    this.locale = locale;
     this.sb = new StringBuilder();
     this.airQuality = new String[BRIEF_INDEX];
     rb = ResourceBundle.getBundle("noaa", locale);
@@ -128,13 +130,13 @@ public class AwBuilder {
       }
       JsonNode air = airAndPollen.get("airquality");
       airQuality[index12] = air == null ? ""
-          : String.format(AIR_QUALITY, dayOfWeekString, air.at("/Category").asText()) + "\n";
+          : String.format(AIR_QUALITY, dayOfWeekString, air.at("/Category").asText().toLowerCase(locale)) + "\n";
 
       if (!night) { // UV index
         JsonNode uv = airAndPollen.get("uvindex");
         if (uv != null) {
-          sb.append(' ')
-              .append(String.format(UV_INDEX, uv.at("/Value").asInt(), uv.at("/Category").asText()));
+          sb.append(' ').append(
+              String.format(UV_INDEX, uv.at("/Value").asInt(), uv.at("/Category").asText().toLowerCase(locale)));
         }
       }
     }
@@ -164,7 +166,8 @@ public class AwBuilder {
     // 2. weather conditions
     OffsetDateTime observationDateTime =
         OffsetDateTime.parse(currentObservation0.at("/LocalObservationDateTime").asText());
-    sb.append(String.format(CONDITIONS, observationDateTime.format(DateTimeFormatter.ofPattern("h a")))).append("\n");
+    sb.append(String.format(CONDITIONS,
+        observationDateTime.format(DateTimeFormatter.ofPattern("h a")).toLowerCase(locale))).append("\n");
     sb.append(String.format(TEMPERATURE,
         currentObservation0.at("/WeatherText").asText(),
         currentObservation0.at("/Temperature/Metric/Value").asDouble()))
